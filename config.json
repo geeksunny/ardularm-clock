@@ -1,0 +1,9 @@
+{
+  "IS_DEBUG_MODE": "",
+  "DEVICE_NAME": "ArdularmClock",
+  "CLIENT": {
+    "SSID": "NetworkName",
+    "ENCRYPTED": true,
+    "PASS": "NetworkPassword"
+  }
+}
