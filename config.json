@@ -5,5 +5,8 @@
     "SSID": "NetworkName",
     "ENCRYPTED": true,
     "PASS": "NetworkPassword"
+  },
+  "LED": {
+    "WIFI": "`D3`"
   }
 }
