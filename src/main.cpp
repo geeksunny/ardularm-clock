@@ -4,12 +4,16 @@
 #include <DS3232RTC.h>
 #include <LED.h>
 #include <WifiTools.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #ifndef LED_WIFI
 #define LED_WIFI D3
 #endif
 
 #define BLINK_DURATION_QUICK      250
+#define BLINK_DURATION_STANDARD   500
+#define BLINK_DURATION_LONG       1000
 
 namespace strings {
     // Days of the week, abbreviated
@@ -37,12 +41,19 @@ namespace strings {
     const char unknown[] PROGMEM = "UNKNOWN";
 }
 
+// RTC vars
 DS3232RTC rtc;
 String dayOfTheWeek, monthOfTheYear;
+// LED vars
 led::LED *wifi_led;
+// NTP client vars
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org");
+bool ntpSynced = false;
 
 void on_wait_wifi_cb() {
     DEBUG("Wifi not yet available...")
+    wifi_led->toggle();
     led::LED::loop();
 }
 
@@ -102,7 +113,6 @@ void setup() {
     SETUP_SERIAL(BAUD_RATE, 3000, "Serial console ready.")
     // RTC init
     rtc.begin();
-    setTime(18, 43, 30, 18, 11, 2024); // Temporary test value
     setSyncProvider(rtc.get);
     if (timeStatus() != timeSet) {
         DEBUG("Unable to sync with the RTC")
@@ -115,8 +125,21 @@ void setup() {
     wifi_led = new led::LED(LED_WIFI);
     wifi_led->setup();
     // Connect to wifi with a custom wait status callback
-    wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_QUICK);
+    wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_STANDARD);
     wifi_led->on();
+    // NTP client init
+    timeClient.begin(); // Start client
+    // TODO: Do we want a time offset here? Or rather use the Timezone lib?
+    timeClient.setTimeOffset(0);
+    if (!ntpSynced) {
+        DEBUG("Attempting to sync time with NTP server.")
+        // Get time from server
+        while (!timeClient.update()) {} // Wait for update to take place.
+        DEBUG("NTP time: ", timeClient.getFormattedTime().c_str())
+        setTime(timeClient.getEpochTime()); // Set system time to NTP data
+        rtc.set(now()); // Set RTC time using system time
+        ntpSynced = true;
+    }
 }
 
 void printDigits(int digits) {
