@@ -8,5 +8,23 @@
   },
   "LED": {
     "WIFI": "`D3`"
+  },
+  "TZ": {
+    "DST": {
+      "NAME": "CDT",
+      "OFFSET": -300,
+      "WEEK": 2,
+      "DAY": 1,
+      "MONTH": 3,
+      "HOUR": 2
+    },
+    "STD": {
+      "NAME": "CST",
+      "OFFSET": -360,
+      "WEEK": 1,
+      "DAY": 1,
+      "MONTH": 11,
+      "HOUR": 2
+    }
   }
 }

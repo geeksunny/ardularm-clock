@@ -5,6 +5,7 @@
 #include <LED.h>
 #include <WifiTools.h>
 #include <NTPClient.h>
+#include <Timezone.h>
 #include <WiFiUdp.h>
 
 #ifndef LED_WIFI
@@ -50,6 +51,10 @@ led::LED *wifi_led;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 bool ntpSynced = false;
+// Timezone vars
+TimeChangeRule dstRule = {TZ_DST_NAME, TZ_DST_WEEK, TZ_DST_DAY, TZ_DST_MONTH, TZ_DST_HOUR, TZ_DST_OFFSET};
+TimeChangeRule stdRule = {TZ_STD_NAME, TZ_STD_WEEK, TZ_STD_DAY, TZ_STD_MONTH, TZ_STD_HOUR, TZ_STD_OFFSET};
+Timezone tz(dstRule, stdRule);
 
 void on_wait_wifi_cb() {
     DEBUG("Wifi not yet available...")
@@ -140,6 +145,7 @@ void setup() {
         rtc.set(now()); // Set RTC time using system time
         ntpSynced = true;
     }
+    // Timezone settings
 }
 
 void printDigits(int digits) {
@@ -168,9 +174,15 @@ void digitalClockDisplay() {
     Serial.println();
 }
 
+void printDateTime(time_t t)
+{
+    DEBUG("Local time: ", hour(t), ':', minute(t), ':', second(t));
+}
+
 void loop() {
     wifi_led->toggle();
     led::LED::loop();
     digitalClockDisplay();
+    printDateTime(tz.toLocal(now()));
     delay(1000);
 }
