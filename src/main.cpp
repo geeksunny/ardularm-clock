@@ -7,6 +7,17 @@
 #include <NTPClient.h>
 #include <Timezone.h>
 #include <WiFiUdp.h>
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <font.h>
+#include <SPI.h>
+#include <sstream>
+#include <iomanip>
+
+// MAX7291
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+#define MAX_DEVICES 4
+#define CS_PIN 15
 
 #ifndef LED_WIFI
 #define LED_WIFI D3
@@ -40,6 +51,8 @@ namespace strings {
     const char mon_dec[] PROGMEM = "Dec";
     // Misc
     const char unknown[] PROGMEM = "UNKNOWN";
+    const char clk_am[] PROGMEM = "AM";
+    const char clk_pm[] PROGMEM = "PM";
 }
 
 // RTC vars
@@ -55,6 +68,9 @@ bool ntpSynced = false;
 TimeChangeRule dstRule = {TZ_DST_NAME, TZ_DST_WEEK, TZ_DST_DAY, TZ_DST_MONTH, TZ_DST_HOUR, TZ_DST_OFFSET};
 TimeChangeRule stdRule = {TZ_STD_NAME, TZ_STD_WEEK, TZ_STD_DAY, TZ_STD_MONTH, TZ_STD_HOUR, TZ_STD_OFFSET};
 Timezone tz(dstRule, stdRule);
+//MAX7219
+MD_Parola Display = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+std::stringstream ss;
 
 void on_wait_wifi_cb() {
     DEBUG("Wifi not yet available...")
@@ -126,12 +142,20 @@ void setup() {
     }
     dayOfTheWeek = getDayOfTheWeek(dayOfWeek(now()));
     monthOfTheYear = getMonthOfTheYear(month());
+    // MAX7219
+    Display.begin();
+    Display.setIntensity(0);
+    Display.displayClear();
+    Display.setFont(ROG);
+    Display.setTextAlignment(PA_LEFT);
+    Display.print("Wifi...");
     // setup LED
     wifi_led = new led::LED(LED_WIFI);
     wifi_led->setup();
     // Connect to wifi with a custom wait status callback
     wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_STANDARD);
     wifi_led->on();
+    Display.print("Sync...");
     // NTP client init
     timeClient.begin(); // Start client
     // TODO: Do we want a time offset here? Or rather use the Timezone lib?
@@ -145,44 +169,30 @@ void setup() {
         rtc.set(now()); // Set RTC time using system time
         ntpSynced = true;
     }
-    // Timezone settings
 }
 
-void printDigits(int digits) {
-    // utility function for digital clock display: prints preceding colon and leading 0
-    Serial.print(':');
-    if(digits < 10)
-        Serial.print('0');
-    Serial.print(digits);
-}
-
-void digitalClockDisplay() {
-    // digital clock display of the time
-    Serial.print(hour());
-    printDigits(minute());
-    printDigits(second());
-    Serial.print(' ');
-    Serial.print(dayOfTheWeek);
-    Serial.print('(');
-    Serial.print(day());
-    Serial.print(") ");
-    Serial.print(monthOfTheYear);
-    Serial.print('(');
-    Serial.print(month());
-    Serial.print(") ");
-    Serial.print(year());
-    Serial.println();
-}
-
-void printDateTime(time_t t)
-{
-    DEBUG("Local time: ", hour(t), ':', minute(t), ':', second(t));
+String getTime(time_t t) {
+    ss.str("");
+    ss.clear();
+    // TODO: read in AM/PM string. store outside function
+    //  AM/PM display can only be when not showing seconds.
+    int hr = hour(t);
+    if (hr < 12) {
+        hr -= 12;
+    }
+    ss << std::setfill('0') << std::setw(2) << hr << ':'
+        << std::setfill('0') << std::setw(2) << minute(t) << ':'
+        << std::setfill('0') << std::setw(2) << second(t);
+    return ss.str().c_str();
 }
 
 void loop() {
-    wifi_led->toggle();
-    led::LED::loop();
-    digitalClockDisplay();
-    printDateTime(tz.toLocal(now()));
+    // wifi_led->toggle();
+    // led::LED::loop();
+    String timeStr = getTime(tz.toLocal(now()));
+    Display.print(timeStr);
+    Serial.print("Time: ");
+    Serial.print(timeStr);
+    Serial.println();
     delay(1000);
 }
