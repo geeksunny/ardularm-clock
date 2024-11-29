@@ -9,10 +9,10 @@
 #include <WiFiUdp.h>
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
-#include <font.h>
 #include <SPI.h>
 #include <sstream>
 #include <iomanip>
+#include "matrix/font.h"
 
 // MAX7291
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
