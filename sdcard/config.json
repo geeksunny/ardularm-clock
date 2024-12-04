@@ -1,0 +1,10 @@
+{
+  "tz": "CT",
+  "adjust_dst": true,
+  "zip": "55555",
+  "wifi": {
+    "ssid": "NetworkName",
+    "password": "NetworkPassword"
+  },
+  "snooze": 10
+}
