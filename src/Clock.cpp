@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include "matrix/font.h"
 
 namespace clock_ns {
 
@@ -16,17 +17,28 @@ bool ntpSynced = false;
 String dayOfTheWeek, monthOfTheYear;
 std::stringstream ss;
 
-String getTime(time_t t) {
+String getTime(time_t t, char separator, bool display_12hr) {
   ss.str("");
   ss.clear();
   int hr = hour(t);
-  if (hr < 12) {
+  if (display_12hr && hr < 12) {
     hr -= 12;
   }
-  ss << std::setfill('0') << std::setw(2) << hr << ':'
-     << std::setfill('0') << std::setw(2) << minute(t) << ':'
+  ss << std::setfill('0') << std::setw(2) << hr << separator
+     << std::setfill('0') << std::setw(2) << minute(t) << separator
      << std::setfill('0') << std::setw(2) << second(t);
   return ss.str().c_str();
+}
+
+String getTimeBinary(time_t t) {
+  String time = getTime(t, ' ', false);
+  uint8_t len = time.length();
+  for (int i = 0; i < len; i++) {
+    if (time[i] != ' ') {
+      time[i] = time[i] - char(BINARY_CHAR_OFFSET);
+    }
+  }
+  return time;
 }
 
 void setup() {

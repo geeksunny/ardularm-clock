@@ -91,8 +91,10 @@ void setup() {
 void loop() {
     // wifi_led->toggle();
     // led::LED::loop();
-    String timeStr = clock_ns::getTime(tz.toLocal(now()));
-    Display.print(timeStr);
+    time_t time = tz.toLocal(now());
+    String timeStr = clock_ns::getTime(time);
+    String binaryTimeStr = clock_ns::getTimeBinary(time);
+    Display.print(binaryTimeStr);
     Serial.print("Time: ");
     Serial.print(timeStr);
     Serial.println();
