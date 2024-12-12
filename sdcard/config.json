@@ -1,11 +1,12 @@
 {
+  "brightness": 0,
   "tz": "CT",
   "adjust_dst": true,
   "military_time": false,
-  "zip": "55555",
+  "snooze": 10,
   "wifi": {
     "ssid": "NetworkName",
     "password": "NetworkPassword"
   },
-  "snooze": 10
+  "zip": "55555"
 }

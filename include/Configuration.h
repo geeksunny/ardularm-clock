@@ -20,6 +20,7 @@ class Wifi : public json::JsonModel {
 class ClockConfig : public json::JsonModel {
  public:
   ClockConfig() = default;
+  uint8_t GetBrightness() const;
   Timezone GetTz() const;
   bool IsAdjustDst() const;
   bool UseMilitaryTime() const;
@@ -27,6 +28,7 @@ class ClockConfig : public json::JsonModel {
   const Wifi &GetWifi() const;
   int GetSnooze() const;
  private:
+  uint8_t brightness_;
   Timezone tz_;
   bool adjust_dst_;
   bool use_military_time_;

@@ -44,25 +44,25 @@ void on_wait_wifi_cb() {
 
 void setup() {
   SETUP_SERIAL(BAUD_RATE, 3000, "Serial console ready.")
-  // Config
-  cfg.load();
-  DEBUG("Configuration file loaded from SD card.")
-  use_military_time = cfg.GetClockConfig().UseMilitaryTime();
-  // Clock setup
-  clock_ns::setup();
   // MAX7219
   Display.begin(2);
   Display.setZone(0, 0, 2);
   Display.setZone(1, 3, 3);
-  Display.setIntensity(0);
-  Display.displayClear();
   Display.setFont(glyphs);
-  Display.displayZoneText(0, "Wifi?", PA_LEFT, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
-  animation.display(1, PA_LEFT, ANIMATE_SPEED_QUICK);
+  Display.displayClear();
+  // Config
+  cfg.load();
+  DEBUG("Configuration file loaded from SD card.")
+  use_military_time = cfg.GetClockConfig().UseMilitaryTime();
+  Display.setIntensity(cfg.GetClockConfig().GetBrightness());
+  // Clock setup
+  clock_ns::setup();
   // setup LED
   wifi_led = new led::LED(PIN_LED_WIFI);
   wifi_led->setup();
-  // Connect to wifi with a custom wait status callback
+  // Connect to wifi with a custom wait status callback. Display wifi animation.
+  Display.displayZoneText(0, "Wifi?", PA_LEFT, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
+  animation.display(1, PA_LEFT, ANIMATE_SPEED_QUICK);
   animation.displayAnimate();
   wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_QUICK);
   wifi_led->on();

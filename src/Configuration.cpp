@@ -12,14 +12,15 @@ const char filename_config[] PROGMEM = "config.json";
 const char filename_alarms[] PROGMEM = "alarms.json";
 
 // Keys
+const char key_brightness[] PROGMEM = "brightness";
 const char key_tz[] PROGMEM = "tz";
 const char key_dst[] PROGMEM = "adjust_dst";
 const char key_military_time[] PROGMEM = "military_time";
-const char key_zip[] PROGMEM = "zip";
+const char key_snooze[] PROGMEM = "snooze";
 const char key_wifi[] PROGMEM = "wifi";
 const char key_ssid[] PROGMEM = "ssid";
 const char key_password[] PROGMEM = "password";
-const char key_snooze[] PROGMEM = "snooze";
+const char key_zip[] PROGMEM = "zip";
 
 const char key_start[] PROGMEM = "start";
 const char key_stop[] PROGMEM = "stop";
@@ -42,6 +43,15 @@ MAKE_ENUM_MAP(timezone_map, Timezone,
 
 bool ClockConfig::onKey(String &key, json::JsonParser &parser) {
   STR_EQ_INIT(key.c_str())
+  STR_CASE_EQ_DO(strings::key_brightness, {
+    bool success = parser.get(brightness_);
+    if (brightness_ <= 0) {
+      brightness_ = 0;
+    } else if (brightness_ > 15) {
+      brightness_ = 15;
+    }
+    return success;
+  })
   STR_CASE_EQ_DO(strings::key_tz, {
     String tz;
     bool success = parser.get(tz);
@@ -50,10 +60,14 @@ bool ClockConfig::onKey(String &key, json::JsonParser &parser) {
   })
   STR_EQ_RET(strings::key_dst, parser.get(adjust_dst_))
   STR_EQ_RET(strings::key_military_time, parser.get(use_military_time_))
-  STR_EQ_RET(strings::key_zip, parser.get(zip_))
-  STR_EQ_RET(strings::key_wifi, parser.get(wifi_))
   STR_EQ_RET(strings::key_snooze, parser.get(snooze_))
+  STR_EQ_RET(strings::key_wifi, parser.get(wifi_))
+  STR_EQ_RET(strings::key_zip, parser.get(zip_))
   return false;
+}
+
+uint8_t ClockConfig::GetBrightness() const {
+  return brightness_;
 }
 
 Timezone ClockConfig::GetTz() const {
