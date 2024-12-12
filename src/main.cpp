@@ -42,12 +42,6 @@ void on_wait_wifi_cb() {
   animation.displayAnimate();
 }
 
-void on_wait_ntp_cb() {
-  if (!animation.displayAnimate()) {
-    // Todo: call reset?
-  }
-}
-
 void setup() {
   SETUP_SERIAL(BAUD_RATE, 3000, "Serial console ready.")
   // Config
@@ -73,14 +67,12 @@ void setup() {
   wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_QUICK);
   wifi_led->on();
   Display.displayReset();
-  animation.setAsciiCodes(9, 0);
-  animation.display(1, PA_LEFT, ANIMATE_SPEED_QUICK, 0, PA_SCROLL_DOWN);
-  Display.displayZoneText(0, "Time?", PA_CENTER, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
-  // NTP client init
-  animation.displayAnimate();
+  // Sync time from NTP.
   if (!clock_ns::isNTPSynced()) {
-    // TODO: Different callback here when animations implemented
-    clock_ns::syncToNTP(on_wait_ntp_cb);
+    Display.displayZoneText(1, String(char(22)).c_str(), PA_CENTER, 0, 0, PA_PRINT);
+    animation.setAsciiCodes(9, 0);
+    Display.displayZoneText(0, "Time?", PA_CENTER, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
+    clock_ns::syncToNTP();
   }
   // Clear display, remove zone 1
   Display.displayZoneText(1, nullptr, PA_LEFT, 0, 0, PA_PRINT);

@@ -21,7 +21,7 @@ String getTime(time_t t, char separator, bool display_12hr) {
   ss.str("");
   ss.clear();
   int hr = hour(t);
-  if (display_12hr && hr < 12) {
+  if (display_12hr && hr > 12) {
     hr -= 12;
   }
   ss << std::setfill('0') << std::setw(2) << hr << separator
@@ -58,7 +58,7 @@ bool isNTPSynced() {
   return ntpSynced;
 }
 
-bool syncToNTP(on_wait_cb_t on_wait_cb) {
+bool syncToNTP() {
   WiFiUDP ntpUDP;
   NTPClient timeClient(ntpUDP, "pool.ntp.org");
   timeClient.begin();
@@ -67,9 +67,6 @@ bool syncToNTP(on_wait_cb_t on_wait_cb) {
   // Get time from server
   while (!timeClient.update()) {
     // Wait for update to take place.
-    if (on_wait_cb) {
-      on_wait_cb();
-    }
   }
   DEBUG("NTP time: ", timeClient.getFormattedTime().c_str())
   setTime(timeClient.getEpochTime()); // Set system time to NTP data
