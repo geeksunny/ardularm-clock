@@ -8,6 +8,7 @@
 #include <MD_Parola.h>
 #include <SPI.h>
 #include "Clock.h"
+#include "Configuration.h"
 #include "matrix/font.h"
 #include "matrix/FontSprite.h"
 
@@ -19,8 +20,12 @@
 #define ANIMATE_SPEED_NORMAL      100
 #define ANIMATE_SPEED_SLOW        200
 
+// Configuration
+config::Configuration cfg;
 // LED vars
 led::LED *wifi_led;
+// Display vars
+bool use_military_time;
 // Timezone vars
 TimeChangeRule dstRule = {TZ_DST_NAME, TZ_DST_WEEK, TZ_DST_DAY, TZ_DST_MONTH, TZ_DST_HOUR, TZ_DST_OFFSET};
 TimeChangeRule stdRule = {TZ_STD_NAME, TZ_STD_WEEK, TZ_STD_DAY, TZ_STD_MONTH, TZ_STD_HOUR, TZ_STD_OFFSET};
@@ -45,6 +50,10 @@ void on_wait_ntp_cb() {
 
 void setup() {
   SETUP_SERIAL(BAUD_RATE, 3000, "Serial console ready.")
+  // Config
+  cfg.load();
+  DEBUG("Configuration file loaded from SD card.")
+  use_military_time = cfg.GetClockConfig().UseMilitaryTime();
   // Clock setup
   clock_ns::setup();
   // MAX7219
@@ -75,7 +84,7 @@ void setup() {
   }
   // Clear display, remove zone 1
   Display.displayZoneText(1, nullptr, PA_LEFT, 0, 0, PA_PRINT);
-  Display.setZone(0, 0, MAX_DEVICES - 1);
+  Display.setZone(0, 0, MD_MAX_DEVICES - 1);
   Display.displayClear();
   Display.setTextAlignment(PA_LEFT);
 }
@@ -84,9 +93,9 @@ void loop() {
   // wifi_led->toggle();
   // led::LED::loop();
   time_t time = tz.toLocal(now());
-  String timeStr = clock_ns::getTime(time);
-  String binaryTimeStr = clock_ns::getTimeBinary(time);
-  Display.print(binaryTimeStr);
+  String timeStr = clock_ns::getTime(time, ':', !use_military_time);
+//  String binaryTimeStr = clock_ns::getTimeBinary(time);
+  Display.print(timeStr);
   Serial.print("Time: ");
   Serial.print(timeStr);
   Serial.println();

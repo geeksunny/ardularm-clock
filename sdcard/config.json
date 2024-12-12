@@ -1,6 +1,7 @@
 {
   "tz": "CT",
   "adjust_dst": true,
+  "military_time": false,
   "zip": "55555",
   "wifi": {
     "ssid": "NetworkName",

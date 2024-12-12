@@ -9,10 +9,27 @@ enum class Timezone {
   PT, MT, CT, ET
 };
 
-class Configuration : json::JsonModel {
+class Wifi : public json::JsonModel {
+ private:
+  String ssid_;
+  String password_;
+
+  bool onKey(String &key, json::JsonParser &parser) override;
+};
+
+class ClockConfig : public json::JsonModel {
+ public:
+  ClockConfig() = default;
+  Timezone GetTz() const;
+  bool IsAdjustDst() const;
+  bool UseMilitaryTime() const;
+  const String &GetZip() const;
+  const Wifi &GetWifi() const;
+  int GetSnooze() const;
  private:
   Timezone tz_;
   bool adjust_dst_;
+  bool use_military_time_;
   String zip_;
   Wifi wifi_;
   int snooze_;
@@ -20,12 +37,13 @@ class Configuration : json::JsonModel {
   bool onKey(String &key, json::JsonParser &parser) override;
 };
 
-class Wifi : json::JsonModel {
+class Configuration {
+ public:
+  Configuration() = default;
+  bool load();
+  const ClockConfig &GetClockConfig() const;
  private:
-  String ssid_;
-  String password_;
-
-  bool onKey(String &key, JsonParser &parser) override;
+  ClockConfig clock_config_;
 };
 
 } // config

@@ -1,6 +1,8 @@
 #include "Configuration.h"
+#include "DebugLog.hpp"
 #include <PgmStringTools.hpp>
 #include <EnumTools.hpp>
+#include <SD.h>
 
 namespace config {
 
@@ -12,6 +14,7 @@ const char filename_alarms[] PROGMEM = "alarms.json";
 // Keys
 const char key_tz[] PROGMEM = "tz";
 const char key_dst[] PROGMEM = "adjust_dst";
+const char key_military_time[] PROGMEM = "military_time";
 const char key_zip[] PROGMEM = "zip";
 const char key_wifi[] PROGMEM = "wifi";
 const char key_ssid[] PROGMEM = "ssid";
@@ -37,7 +40,7 @@ MAKE_ENUM_MAP(timezone_map, Timezone,
               MAPPING(Timezone::ET, strings::value_et)
 )
 
-bool Configuration::onKey(String &key, json::JsonParser &parser) {
+bool ClockConfig::onKey(String &key, json::JsonParser &parser) {
   STR_EQ_INIT(key.c_str())
   STR_CASE_EQ_DO(strings::key_tz, {
     String tz;
@@ -46,9 +49,35 @@ bool Configuration::onKey(String &key, json::JsonParser &parser) {
     return success;
   })
   STR_EQ_RET(strings::key_dst, parser.get(adjust_dst_))
+  STR_EQ_RET(strings::key_military_time, parser.get(use_military_time_))
+  STR_EQ_RET(strings::key_zip, parser.get(zip_))
   STR_EQ_RET(strings::key_wifi, parser.get(wifi_))
   STR_EQ_RET(strings::key_snooze, parser.get(snooze_))
   return false;
+}
+
+Timezone ClockConfig::GetTz() const {
+  return tz_;
+}
+
+bool ClockConfig::IsAdjustDst() const {
+  return adjust_dst_;
+}
+
+bool ClockConfig::UseMilitaryTime() const {
+  return use_military_time_;
+}
+
+const String &ClockConfig::GetZip() const {
+  return zip_;
+}
+
+const Wifi &ClockConfig::GetWifi() const {
+  return wifi_;
+}
+
+int ClockConfig::GetSnooze() const {
+  return snooze_;
 }
 
 bool Wifi::onKey(String &key, json::JsonParser &parser) {
@@ -56,6 +85,34 @@ bool Wifi::onKey(String &key, json::JsonParser &parser) {
   STR_EQ_RET(strings::key_ssid, parser.get(ssid_))
   STR_EQ_RET(strings::key_password, parser.get(password_))
   return false;
+}
+
+const ClockConfig &Configuration::GetClockConfig() const {
+  return clock_config_;
+}
+
+bool Configuration::load() {
+  String filename;
+  File file;
+  bool success_config, success_alarms;
+
+  if (!SD.begin(PIN_SD_CS)) {
+    return false;
+  }
+
+  // Config
+  {
+    filename = read_prog_str(strings::filename_config);
+    file = SD.open(filename);
+    json::JsonParser parser(file);
+    success_config = parser.get(clock_config_);
+    if (!success_config) {
+      DEBUG("Error parsing ", filename.c_str())
+    }
+    file.close();
+  }
+
+  return success_config && success_alarms;
 }
 
 } // config
