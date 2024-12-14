@@ -61,7 +61,7 @@ void setup() {
   wifi_led = new led::LED(PIN_LED_WIFI);
   wifi_led->setup();
   // Connect to wifi with a custom wait status callback. Display wifi animation.
-  Display.displayZoneText(0, "Wifi?", PA_LEFT, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
+  Display.displayZoneText(0, "Wifi?", PA_CENTER, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
   animation.display(1, PA_LEFT, ANIMATE_SPEED_QUICK);
   animation.displayAnimate();
   wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_QUICK);
@@ -69,9 +69,10 @@ void setup() {
   Display.displayReset();
   // Sync time from NTP.
   if (!clock_ns::isNTPSynced()) {
-    Display.displayZoneText(1, String(char(22)).c_str(), PA_CENTER, 0, 0, PA_PRINT);
-    animation.setAsciiCodes(9, 0);
-    Display.displayZoneText(0, "Time?", PA_CENTER, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
+    char icon = char(19);
+    Display.displayZoneText(1, &icon, PA_CENTER, 0, 0, PA_PRINT);
+    Display.displayZoneText(0, "Time?", PA_CENTER, 0, 0, PA_PRINT);
+    Display.displayAnimate();
     clock_ns::syncToNTP();
   }
   // Clear display, remove zone 1
