@@ -59,7 +59,10 @@ void setup() {
   Display.displayZoneText(0, "Wifi?", PA_CENTER, ANIMATE_SPEED_QUICK, 0, PA_PRINT);
   animation.display(1, PA_LEFT, ANIMATE_SPEED_QUICK);
   animation.displayAnimate();
-  wifi_tools::startClient(on_wait_wifi_cb, BLINK_DURATION_QUICK);
+  wifi_tools::startClient(cfg.GetClockConfig().GetWifi().GetSsid().c_str(),
+                          cfg.GetClockConfig().GetWifi().GetPassword().c_str(),
+                          on_wait_wifi_cb,
+                          BLINK_DURATION_QUICK);
   wifi_led->on();
   Display.displayReset();
   // Sync time from NTP.

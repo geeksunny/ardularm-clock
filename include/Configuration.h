@@ -10,6 +10,9 @@ enum Timezone {
 };
 
 class Wifi : public json::JsonModel {
+ public:
+  const String &GetSsid() const;
+  const String &GetPassword() const;
  private:
   String ssid_;
   String password_;

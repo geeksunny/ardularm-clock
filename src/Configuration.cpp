@@ -115,14 +115,21 @@ bool Wifi::onKey(String &key, json::JsonParser &parser) {
   return false;
 }
 
+const String &Wifi::GetSsid() const {
+  return ssid_;
+}
+
+const String &Wifi::GetPassword() const {
+  return password_;
+}
+
 const ClockConfig &Configuration::GetClockConfig() const {
   return clock_config_;
 }
 
 bool Configuration::load() {
   String filename;
-  File file;
-  bool success_config, success_alarms;
+  File file;  bool success_config, success_alarms;
 
   if (!SD.begin(PIN_SD_CS)) {
     return false;
