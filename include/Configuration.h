@@ -5,8 +5,8 @@
 
 namespace config {
 
-enum class Timezone {
-  PT, MT, CT, ET
+enum Timezone {
+  ET = 4, CT, MT, PT
 };
 
 class Wifi : public json::JsonModel {
@@ -24,6 +24,8 @@ class ClockConfig : public json::JsonModel {
   Timezone GetTz() const;
   bool IsAdjustDst() const;
   bool UseMilitaryTime() const;
+  bool ShowSeconds() const;
+  bool ShowLeadingZero() const;
   const String &GetZip() const;
   const Wifi &GetWifi() const;
   int GetSnooze() const;
@@ -32,6 +34,8 @@ class ClockConfig : public json::JsonModel {
   Timezone tz_;
   bool adjust_dst_;
   bool use_military_time_;
+  bool show_seconds_;
+  bool show_leading_zero_;
   String zip_;
   Wifi wifi_;
   int snooze_;

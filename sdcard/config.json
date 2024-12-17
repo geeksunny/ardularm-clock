@@ -3,6 +3,8 @@
   "tz": "CT",
   "adjust_dst": true,
   "military_time": false,
+  "show_seconds": false,
+  "show_leading_zero": false,
   "snooze": 10,
   "wifi": {
     "ssid": "NetworkName",

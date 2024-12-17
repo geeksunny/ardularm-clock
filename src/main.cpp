@@ -24,12 +24,8 @@
 config::Configuration cfg;
 // LED vars
 led::LED *wifi_led;
-// Display vars
-bool use_military_time;
-// Timezone vars
-TimeChangeRule dstRule = {TZ_DST_NAME, TZ_DST_WEEK, TZ_DST_DAY, TZ_DST_MONTH, TZ_DST_HOUR, TZ_DST_OFFSET};
-TimeChangeRule stdRule = {TZ_STD_NAME, TZ_STD_WEEK, TZ_STD_DAY, TZ_STD_MONTH, TZ_STD_HOUR, TZ_STD_OFFSET};
-Timezone tz(dstRule, stdRule);
+// Clock vars
+clock_ns::Clock *clock_;
 //MAX7219
 MD_Parola Display = MD_Parola(MD_HARDWARE_TYPE, PIN_MD_CS, MD_MAX_DEVICES);
 
@@ -53,10 +49,9 @@ void setup() {
   // Config
   cfg.load();
   DEBUG("Configuration file loaded from SD card.")
-  use_military_time = cfg.GetClockConfig().UseMilitaryTime();
   Display.setIntensity(cfg.GetClockConfig().GetBrightness());
   // Clock setup
-  clock_ns::setup();
+  clock_ = new clock_ns::Clock(cfg.GetClockConfig().GetTz());
   // setup LED
   wifi_led = new led::LED(PIN_LED_WIFI);
   wifi_led->setup();
@@ -68,12 +63,12 @@ void setup() {
   wifi_led->on();
   Display.displayReset();
   // Sync time from NTP.
-  if (!clock_ns::isNTPSynced()) {
+  if (!clock_->isNTPSynced()) {
     char icon = char(19);
     Display.displayZoneText(1, &icon, PA_CENTER, 0, 0, PA_PRINT);
     Display.displayZoneText(0, "Time?", PA_CENTER, 0, 0, PA_PRINT);
     Display.displayAnimate();
-    clock_ns::syncToNTP();
+    clock_->syncToNTP();
   }
   // Clear display, remove zone 1
   Display.displayZoneText(1, nullptr, PA_LEFT, 0, 0, PA_PRINT);
@@ -85,8 +80,10 @@ void setup() {
 void loop() {
   // wifi_led->toggle();
   // led::LED::loop();
-  time_t time = tz.toLocal(now());
-  String timeStr = clock_ns::getTime(time, ':', !use_military_time);
+  String timeStr = clock_->getTime(':',
+                                   !cfg.GetClockConfig().UseMilitaryTime(),
+                                   cfg.GetClockConfig().ShowLeadingZero(),
+                                   cfg.GetClockConfig().ShowSeconds());
 //  String binaryTimeStr = clock_ns::getTimeBinary(time);
   Display.print(timeStr);
   Serial.print("Time: ");

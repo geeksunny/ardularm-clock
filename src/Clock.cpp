@@ -9,29 +9,49 @@
 
 namespace clock_ns {
 
-// RTC vars
-DS3232RTC rtc;
-// NTP vars
-bool ntpSynced = false;
-// Display vars
-String dayOfTheWeek, monthOfTheYear;
 std::stringstream ss;
 
-String getTime(time_t t, char separator, bool display_12hr) {
+static Timezone createTimezone(config::Timezone tz) {
+  // TODO: remove DST definition if disabled via cfg.adjust_dst.
+  return Timezone(
+      TimeChangeRule{"", week_t::Second, dow_t::Sun, month_t::Feb, 2, 60 * tz},
+      TimeChangeRule{"", week_t::Second, dow_t::Sun, month_t::Feb, 2, 60 * (tz + 1)}
+  );
+}
+
+Clock::Clock(const config::Timezone &tz) : tz_(createTimezone(tz)) {
+  // RTC init
+  rtc_.begin();
+  setSyncProvider(rtc_.get);
+  if (timeStatus() != timeSet) {
+    DEBUG("Unable to sync with the RTC")
+  } else {
+    DEBUG("RTC has set the system time.")
+  }
+  dayOfTheWeek_ = dayShortStr(dayOfWeek(now()));
+  monthOfTheYear_ = monthShortStr(month());
+}
+
+String Clock::getTime(char separator, bool display_12hr, bool show_leading_zero, bool show_seconds) {
+  time_t t = tz_.toLocal(now());
   ss.str("");
   ss.clear();
   int hr = hour(t);
   if (display_12hr && hr > 12) {
     hr -= 12;
   }
-  ss << std::setfill('0') << std::setw(2) << hr << separator
-     << std::setfill('0') << std::setw(2) << minute(t) << separator
-     << std::setfill('0') << std::setw(2) << second(t);
+  if (show_leading_zero) {
+    ss << std::setfill('0') << std::setw(2);
+  }
+  ss << hr << separator << std::setfill('0') << std::setw(2) << minute(t);
+  if (show_seconds) {
+    ss << separator << std::setfill('0') << std::setw(2) << second(t);
+  }
   return ss.str().c_str();
 }
 
-String getTimeBinary(time_t t) {
-  String time = getTime(t, ' ', false);
+String Clock::getTimeBinary(time_t t) {
+  String time = getTime(' ', false);
   uint8_t len = time.length();
   for (int i = 0; i < len; i++) {
     if (time[i] != ' ') {
@@ -41,24 +61,11 @@ String getTimeBinary(time_t t) {
   return time;
 }
 
-void setup() {
-  // RTC init
-  rtc.begin();
-  setSyncProvider(rtc.get);
-  if (timeStatus() != timeSet) {
-    DEBUG("Unable to sync with the RTC")
-  } else {
-    DEBUG("RTC has set the system time.")
-  }
-  dayOfTheWeek = dayShortStr(dayOfWeek(now()));
-  monthOfTheYear = monthShortStr(month());
+bool Clock::isNTPSynced() {
+  return ntpSynced_;
 }
 
-bool isNTPSynced() {
-  return ntpSynced;
-}
-
-bool syncToNTP() {
+bool Clock::syncToNTP() {
   WiFiUDP ntpUDP;
   NTPClient timeClient(ntpUDP, "pool.ntp.org");
   timeClient.begin();
@@ -70,8 +77,8 @@ bool syncToNTP() {
   }
   DEBUG("NTP time: ", timeClient.getFormattedTime().c_str())
   setTime(timeClient.getEpochTime()); // Set system time to NTP data
-  ntpSynced = rtc.set(now()) == 0; // Set RTC time using system time
-  return ntpSynced;
+  ntpSynced_ = rtc_.set(now()) == 0; // Set RTC time using system time
+  return ntpSynced_;
 }
 
 }

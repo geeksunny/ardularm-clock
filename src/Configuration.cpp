@@ -16,6 +16,9 @@ const char key_brightness[] PROGMEM = "brightness";
 const char key_tz[] PROGMEM = "tz";
 const char key_dst[] PROGMEM = "adjust_dst";
 const char key_military_time[] PROGMEM = "military_time";
+const char key_show_seconds[] PROGMEM = "show_seconds";
+const char key_show_leading_zero[] PROGMEM = "show_leading_zero";
+const char key_show_suffix[] PROGMEM = "show_suffix";
 const char key_snooze[] PROGMEM = "snooze";
 const char key_wifi[] PROGMEM = "wifi";
 const char key_ssid[] PROGMEM = "ssid";
@@ -35,10 +38,10 @@ const char value_et[] PROGMEM = "ET";
 }
 
 MAKE_ENUM_MAP(timezone_map, Timezone,
-              MAPPING(Timezone::PT, strings::value_pt),
-              MAPPING(Timezone::MT, strings::value_mt),
+              MAPPING(Timezone::ET, strings::value_et),
               MAPPING(Timezone::CT, strings::value_ct),
-              MAPPING(Timezone::ET, strings::value_et)
+              MAPPING(Timezone::MT, strings::value_mt),
+              MAPPING(Timezone::PT, strings::value_pt)
 )
 
 bool ClockConfig::onKey(String &key, json::JsonParser &parser) {
@@ -55,11 +58,14 @@ bool ClockConfig::onKey(String &key, json::JsonParser &parser) {
   STR_CASE_EQ_DO(strings::key_tz, {
     String tz;
     bool success = parser.get(tz);
+    tz.toUpperCase();
     tz_ = pgm_string_to_enum(tz.c_str(), Timezone::ET, timezone_map);
     return success;
   })
   STR_EQ_RET(strings::key_dst, parser.get(adjust_dst_))
   STR_EQ_RET(strings::key_military_time, parser.get(use_military_time_))
+  STR_EQ_RET(strings::key_show_seconds, parser.get(show_seconds_))
+  STR_EQ_RET(strings::key_show_leading_zero, parser.get(show_leading_zero_))
   STR_EQ_RET(strings::key_snooze, parser.get(snooze_))
   STR_EQ_RET(strings::key_wifi, parser.get(wifi_))
   STR_EQ_RET(strings::key_zip, parser.get(zip_))
@@ -92,6 +98,14 @@ const Wifi &ClockConfig::GetWifi() const {
 
 int ClockConfig::GetSnooze() const {
   return snooze_;
+}
+
+bool ClockConfig::ShowSeconds() const {
+  return show_seconds_;
+}
+
+bool ClockConfig::ShowLeadingZero() const {
+  return show_leading_zero_;
 }
 
 bool Wifi::onKey(String &key, json::JsonParser &parser) {
