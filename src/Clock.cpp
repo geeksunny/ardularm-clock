@@ -15,7 +15,7 @@ static Timezone createTimezone(config::Timezone tz) {
   // TODO: remove DST definition if disabled via cfg.adjust_dst.
   return Timezone(
       TimeChangeRule{"", week_t::Second, dow_t::Sun, month_t::Feb, 2, 60 * tz},
-      TimeChangeRule{"", week_t::Second, dow_t::Sun, month_t::Feb, 2, 60 * (tz + 1)}
+      TimeChangeRule{"", week_t::First, dow_t::Sun, month_t::Nov, 2, 60 * (tz + 1)}
   );
 }
 
